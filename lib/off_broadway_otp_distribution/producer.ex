@@ -1,35 +1,37 @@
 defmodule OffBroadwayOtpDistribution.Producer do
   use GenStage
+
   alias Broadway.Producer
+  alias Broadway.Message
 
-  @impl Producer
-  def prepare_for_start(module, opts) do
-  end
-
-  @impl Producer
-  def prepare_for_draining(%{receive_timer: receive_timer} = state) do
-  end
+  @behaviour Producer
 
   @impl GenStage
   def init(opts) do
+    {:producer, opts}
   end
 
   @impl GenStage
-  def handle_demand(incoming_demand, %{demand: demand} = state) do
-    handle_receive_messages(%{state | demand: demand + incoming_demand})
+  def handle_demand(demand, state) do
+    handle_receive_messages(demand, state)
   end
 
-  defp handle_receive_messages(%{demand: demand} = state) when demand > 0 do
-    messages = receive_messages_from_queue(state, demand)
-    new_demand = demand - length(messages)
-
-    {:noreply, messages, %{state | demand: new_demand}}
+  defp handle_receive_messages(demand, state) when demand > 0 do
+    messages = retrieve_messages_from_queue(demand)
+    {:noreply, messages, state}
   end
 
-  defp handle_receive_messages(state) do
+  defp handle_receive_messages(_demand, state) do
     {:noreply, [], state}
   end
 
-  defp receive_messages_from_queue(state, demand) do
+  defp retrieve_messages_from_queue(demand) do
+    OffBroadwayOtpDistribution.Queue.dequeue(demand)
+    |> Enum.map(fn message ->
+      %Message{
+        data: message,
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
+      }
+    end)
   end
 end

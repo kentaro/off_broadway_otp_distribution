@@ -2,7 +2,7 @@ defmodule OffBroadwayOtpDistribution.Queue do
   use GenServer
 
   @impl GenServer
-  def init(state) do
+  def init(state \\ []) do
     {:ok, state}
   end
 
@@ -23,7 +23,7 @@ defmodule OffBroadwayOtpDistribution.Queue do
 
   @impl GenServer
   def handle_call({:dequeue, demand: _demand}, _from, []) do
-    {:reply, nil, []}
+    {:reply, [], []}
   end
 
   @impl GenServer
