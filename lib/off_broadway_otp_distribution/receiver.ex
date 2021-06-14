@@ -2,10 +2,13 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   use GenServer
   require Logger
 
+  @default_receiver_name :off_broadway_otp_distribution_receiver
+
   @impl GenServer
-  def init(state) do
-    :global.register_name(:off_broadway_otp_distribution_receiver, self())
-    {:ok, state}
+  def init(opts) do
+    name = opts[:name] || @default_receiver_name
+    :global.register_name(name, self())
+    {:ok, opts}
   end
 
   @impl GenServer

@@ -2,7 +2,8 @@ defmodule OffBroadwayOtpDistribution.Queue do
   use GenServer
 
   @impl GenServer
-  def init(state \\ []) do
+  def init(_opts \\ []) do
+    state = []
     {:ok, state}
   end
 
