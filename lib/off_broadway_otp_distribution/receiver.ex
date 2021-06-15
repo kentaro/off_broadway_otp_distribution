@@ -5,16 +5,16 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   @default_receiver_name :off_broadway_otp_distribution_receiver
 
   @impl GenServer
-  def init(opts) do
+  def init(opts \\ []) do
     name = opts[:name] || @default_receiver_name
     :global.register_name(name, self())
-    {:ok, opts}
+    {:ok, %{opts: opts}}
   end
 
   @impl GenServer
-  def handle_info(msg, state) do
-    Logger.info("received: #{inspect(msg)}")
-    OffBroadwayOtpDistribution.Queue.enqueue(msg)
+  def handle_info(message, state) do
+    Logger.info("received: #{inspect(message)}")
+    send(state.opts[:producer], {:receive_messages, [message]})
     {:noreply, state}
   end
 

@@ -17,8 +17,12 @@ defmodule OffBroadwayOtpDistribution.Producer do
 
   @impl GenStage
   def init(opts) do
-    DynamicSupervisor.start_child(OffBroadwayOtpDistribution.DynamicSupervisor, {OffBroadwayOtpDistribution.Receiver, opts[:receiver]})
-    DynamicSupervisor.start_child(OffBroadwayOtpDistribution.DynamicSupervisor, {OffBroadwayOtpDistribution.Queue, opts[:queue]})
+    DynamicSupervisor.start_child(
+      OffBroadwayOtpDistribution.DynamicSupervisor, {
+        OffBroadwayOtpDistribution.Receiver,
+        opts[:receiver] ++ [producer: self()],
+      }
+    )
 
     {:producer, %{
       demand: 0,
@@ -28,38 +32,48 @@ defmodule OffBroadwayOtpDistribution.Producer do
   end
 
   @impl GenStage
-  def handle_demand(incoming_demand, %{demand: demand} = state) do
-    handle_receive_messages(%{state | demand: demand + incoming_demand})
-  end
-
-  @impl GenStage
-  def handle_info(:receive_messages, state) do
-    handle_receive_messages(%{state | receive_timer: nil})
-  end
-
-  defp handle_receive_messages(%{receive_timer: nil, demand: demand} = state) when demand > 0 do
-    messages = receive_messages_from_queue(demand)
-    new_demand = demand - length(messages)
-
-    receive_timer =
-      case {messages, new_demand} do
-        {[], _} -> schedule_receive_messages(state.receive_interval)
-        {_, 0} -> nil
-        _ -> schedule_receive_messages(0)
-      end
-
-    {:noreply, messages, %{state | demand: new_demand, receive_timer: receive_timer}}
-  end
-
-  defp handle_receive_messages(state) do
+  def handle_demand(_incoming_demand, state) do
     {:noreply, [], state}
   end
 
-  defp schedule_receive_messages(interval) do
-    Process.send_after(self(), :receive_messages, interval)
+  @impl GenStage
+  def handle_info({:receive_messages, messages}, state) do
+    {:noreply, messages, state}
   end
 
-  defp receive_messages_from_queue(demand) do
-    OffBroadwayOtpDistribution.Queue.dequeue(demand)
-  end
+  # @impl GenStage
+  # def handle_demand(incoming_demand, %{demand: demand} = state) do
+  #   handle_receive_messages(%{state | demand: demand + incoming_demand})
+  # end
+
+  # @impl GenStage
+  # def handle_info(:receive_messages, state) do
+  #   handle_receive_messages(%{state | receive_timer: nil})
+  # end
+
+  # defp handle_receive_messages(%{receive_timer: nil, demand: demand} = state) when demand > 0 do
+  #   messages = receive_messages_from_queue(demand)
+  #   new_demand = demand - length(messages)
+
+  #   receive_timer =
+  #     case {messages, new_demand} do
+  #       {[], _} -> schedule_receive_messages(state.receive_interval)
+  #       {_, 0} -> nil
+  #       _ -> schedule_receive_messages(0)
+  #     end
+
+  #   {:noreply, messages, %{state | demand: new_demand, receive_timer: receive_timer}}
+  # end
+
+  # defp handle_receive_messages(state) do
+  #   {:noreply, [], state}
+  # end
+
+  # defp schedule_receive_messages(interval) do
+  #   Process.send_after(self(), :receive_messages, interval)
+  # end
+
+  # defp receive_messages_from_queue(demand) do
+  #   OffBroadwayOtpDistribution.Queue.dequeue(demand)
+  # end
 end
