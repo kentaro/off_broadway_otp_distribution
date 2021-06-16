@@ -7,16 +7,66 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def init(opts \\ []) do
+    unless producer = opts[:producer] do
+      raise "opts[:producer] must be specified"
+    end
+
     name = opts[:name] || @default_receiver_name
     :global.register_name(name, self())
-    {:ok, %{opts: opts}}
+
+    {:ok,
+     %{
+       producer: producer,
+       name: name,
+       clients: []
+     }}
+  end
+
+  @impl GenServer
+  def handle_call(:register, client, state) do
+    clients = [client | state.clients]
+    Logger.info("registered: #{inspect(client)}")
+
+    {:reply, :ok, %{state | clients: clients}}
+  end
+
+  @impl GenServer
+  def handle_call(:unregister, client, state) do
+    {client_pid, _} = client
+
+    clients =
+      state.clients
+      |> Enum.all?(fn {pid, _} ->
+        pid != client_pid
+      end)
+
+    Logger.info("unregistered: #{inspect(client)}")
+
+    {:reply, :ok, %{state | clients: clients}}
+  end
+
+  @impl GenServer
+  def handle_call(:request, may_be_producer, state) do
+    {pid, _} = may_be_producer
+
+    if pid == state.producer do
+      state.clients
+      |> Enum.each(fn {pid, _} = client ->
+        send(pid, :request)
+        Logger.info("requested: #{inspect(client)}")
+      end)
+    end
+
+    {:noreply, state}
   end
 
   @impl GenServer
   def handle_info(message, state) do
     Logger.info("received: #{inspect(message)}")
+
     messages = transform_messages([message])
-    send(state.opts[:producer], {:receive_messages, messages})
+    send(state.producer, {:receive_messages, messages})
+
     {:noreply, state}
   end
 
@@ -25,7 +75,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
     |> Enum.map(fn message ->
       %Message{
         data: message,
-        acknowledger: {Broadway.NoopAcknowledger, nil, nil},
+        acknowledger: {Broadway.NoopAcknowledger, nil, nil}
       }
     end)
   end
