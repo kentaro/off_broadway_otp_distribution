@@ -33,10 +33,11 @@ defmodule OffBroadwayOtpDistribution.Producer do
         OffBroadwayOtpDistribution.DynamicSupervisor,
         {
           OffBroadwayOtpDistribution.Receiver,
-          opts[:receiver] ++ [
-            producer: self(),
-            mode: mode
-          ]
+          opts[:receiver] ++
+            [
+              producer: self(),
+              mode: mode
+            ]
         }
       )
 
