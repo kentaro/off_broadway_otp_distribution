@@ -50,6 +50,6 @@ defmodule OffBroadwayOtpDistribution.Producer do
   end
 
   defp request_message(state) do
-    GenServer.call(state.receiver, :request)
+    GenServer.call(state.receiver, :request_demand)
   end
 end

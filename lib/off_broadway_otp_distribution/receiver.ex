@@ -46,22 +46,22 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   end
 
   @impl GenServer
-  def handle_call(:request, may_be_producer, state) do
+  def handle_call(:request_demand, may_be_producer, state) do
     {pid, _} = may_be_producer
 
     if pid == state.producer do
       state.clients
       |> Enum.each(fn {pid, _} = client ->
-        send(pid, :request)
+        GenServer.cast(pid, :request_message)
         Logger.info("requested: #{inspect(client)}")
       end)
     end
 
-    {:noreply, state}
+    {:reply, :ok, state}
   end
 
   @impl GenServer
-  def handle_info(message, state) do
+  def handle_cast({:push_message, message}, state) do
     Logger.info("received: #{inspect(message)}")
 
     messages = transform_messages([message])
