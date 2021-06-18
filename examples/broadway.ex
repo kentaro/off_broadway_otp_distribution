@@ -2,21 +2,24 @@ defmodule ExamplesBroadway do
   use Broadway
   require Logger
 
-  def start_link(_opts \\ []) do
+  def start_link(opts \\ []) do
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
       producer: [
-        module: {OffBroadwayOtpDistribution.Producer, [
-          receiver: [
-            name: :off_broadway_otp_distribution_receiver,
-          ],
-        ]},
+        module:
+          {OffBroadwayOtpDistribution.Producer,
+           [
+             mode: opts[:mode],
+             receiver: [
+               name: :off_broadway_otp_distribution_receiver
+             ]
+           ]}
       ],
       processors: [
         default: [
-          concurrency: 1,
+          concurrency: 1
         ]
-      ],
+      ]
     )
   end
 

@@ -2,17 +2,16 @@ defmodule ExamplesClient do
   use GenServer
   require Logger
 
+  @server_name :server@localhost
   @receiver_name :off_broadway_otp_distribution_receiver
 
   @impl GenServer
   def init(_opts \\ []) do
-    unless Node.connect(:server@localhost) do
+    unless Node.connect(@server_name) do
       raise "Could not connect to the server"
     end
 
     receiver = retrieve_receiver_pid()
-
-    Logger.debug(inspect(receiver))
     GenServer.call(receiver, :register)
 
     {:ok,
@@ -26,9 +25,15 @@ defmodule ExamplesClient do
   end
 
   @impl GenServer
+  def handle_cast({:push_message, message}, state) do
+    GenServer.cast(state.receiver, {:push_message, message})
+    {:noreply, state}
+  end
+
+  @impl GenServer
   def handle_cast(:request_message, state) do
-    Logger.info("got: :request_message")
-    push_message(state)
+    Logger.info("request_message")
+    GenServer.cast(state.receiver, {:respond_to_pull_request, "I'm alive!"})
     {:noreply, state}
   end
 
@@ -38,17 +43,14 @@ defmodule ExamplesClient do
     GenServer.call(state.receiver, :unregister)
   end
 
-  defp push_message(state) do
-    GenServer.cast(state.receiver, {:push_message, "Hi!"})
-  end
-
   defp retrieve_receiver_pid do
-    broadway = :global.whereis_name(@receiver_name)
-    if broadway == :undefined do
-      Process.sleep(500)
+    receiver = :global.whereis_name(@receiver_name)
+
+    if receiver == :undefined do
+      Process.sleep(100)
       retrieve_receiver_pid()
     else
-      broadway
+      receiver
     end
   end
 end

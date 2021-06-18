@@ -5,6 +5,10 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @default_receiver_name :off_broadway_otp_distribution_receiver
 
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  end
+
   @impl GenServer
   def init(opts \\ []) do
     unless producer = opts[:producer] do
@@ -16,16 +20,17 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
     {:ok,
      %{
-       producer: producer,
        name: name,
-       clients: []
+       producer: producer,
+       clients: [],
+       mode: opts[:mode]
      }}
   end
 
   @impl GenServer
   def handle_call(:register, client, state) do
     clients = [client | state.clients]
-    Logger.info("registered: #{inspect(client)}")
+    Logger.info("register: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
   end
@@ -40,21 +45,25 @@ defmodule OffBroadwayOtpDistribution.Receiver do
         pid != client_pid
       end)
 
-    Logger.info("unregistered: #{inspect(client)}")
+    Logger.info("unregister: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
   end
 
   @impl GenServer
-  def handle_call(:request_demand, may_be_producer, state) do
+  def handle_call(:pull_messages, may_be_producer, state) do
+    Logger.info("pull_messages: #{inspect(may_be_producer)}")
+
     {pid, _} = may_be_producer
 
     if pid == state.producer do
       state.clients
       |> Enum.each(fn {pid, _} = client ->
         GenServer.cast(pid, :request_message)
-        Logger.info("requested: #{inspect(client)}")
+        Logger.info("request_message: #{inspect(client)}")
       end)
+    else
+      Logger.info("Ignored :pull_messages call not from the producer.")
     end
 
     {:reply, :ok, state}
@@ -62,10 +71,24 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_cast({:push_message, message}, state) do
-    Logger.info("received: #{inspect(message)}")
+    Logger.info("push_message: #{inspect(message)}")
+
+    if state.mode == :push do
+      messages = transform_messages([message])
+      send(state.producer, {:push_messages, messages})
+    else
+      Logger.info("Ignored a pushed message because the producer doesn't run in the push mode.")
+    end
+
+    {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_cast({:respond_to_pull_request, message}, state) do
+    Logger.info("respond_to_pull_request: #{inspect(message)}")
 
     messages = transform_messages([message])
-    send(state.producer, {:receive_messages, messages})
+    send(state.producer, {:respond_to_pull_request, messages})
 
     {:noreply, state}
   end
@@ -78,11 +101,5 @@ defmodule OffBroadwayOtpDistribution.Receiver do
         acknowledger: {Broadway.NoopAcknowledger, nil, nil}
       }
     end)
-  end
-
-  # Helper APIs
-
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 end
