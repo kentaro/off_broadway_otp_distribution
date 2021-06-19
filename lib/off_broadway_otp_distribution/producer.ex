@@ -79,7 +79,7 @@ defmodule OffBroadwayOtpDistribution.Producer do
   end
 
   defp handle_pull_messages(%{demand: demand} = state) do
-    request_pull_message(state)
+    request_pull_messages(state)
 
     pull_timer =
       cond do
@@ -90,7 +90,7 @@ defmodule OffBroadwayOtpDistribution.Producer do
     {:noreply, [], %{state | pull_timer: pull_timer}}
   end
 
-  defp request_pull_message(state) do
+  defp request_pull_messages(state) do
     GenServer.call(state.receiver, :pull_messages)
   end
 

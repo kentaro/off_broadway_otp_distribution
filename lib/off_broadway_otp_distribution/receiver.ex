@@ -22,14 +22,14 @@ defmodule OffBroadwayOtpDistribution.Receiver do
      %{
        name: name,
        producer: producer,
-       clients: [],
+       clients: [] |> CLL.init(),
        mode: opts[:mode]
      }}
   end
 
   @impl GenServer
   def handle_call(:register, client, state) do
-    clients = [client | state.clients]
+    clients = state.clients |> CLL.insert(client)
     Logger.info("register: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
@@ -41,9 +41,11 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
     clients =
       state.clients
-      |> Enum.all?(fn {pid, _} ->
+      |> CLL.to_list()
+      |> Enum.filter(fn {pid, _} ->
         pid != client_pid
       end)
+      |> CLL.init()
 
     Logger.info("unregister: #{inspect(client)}")
 
@@ -55,18 +57,21 @@ defmodule OffBroadwayOtpDistribution.Receiver do
     Logger.info("pull_messages: #{inspect(may_be_producer)}")
 
     {pid, _} = may_be_producer
-
     if pid == state.producer do
-      state.clients
-      |> Enum.each(fn {pid, _} = client ->
+      if client = state.clients |> CLL.value() do
+        {pid, _} = client
         GenServer.cast(pid, :request_message)
         Logger.info("request_message: #{inspect(client)}")
-      end)
+
+        clients = state.clients |> CLL.next()
+        {:reply, :ok, %{state | clients: clients}}
+      else
+        {:reply, :ok, state}
+      end
     else
       Logger.info("Ignored :pull_messages call not from the producer.")
+      {:reply, :error, state}
     end
-
-    {:reply, :ok, state}
   end
 
   @impl GenServer
