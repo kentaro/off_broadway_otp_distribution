@@ -29,7 +29,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_call(:register, client, state) do
-    clients = state.clients |> CLL.insert(client)
+    clients = register_client(state.clients, client)
     Logger.info("register: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
@@ -37,16 +37,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_call(:unregister, client, state) do
-    {client_pid, _} = client
-
-    clients =
-      state.clients
-      |> CLL.to_list()
-      |> Enum.filter(fn {pid, _} ->
-        pid != client_pid
-      end)
-      |> CLL.init()
-
+    clients = unregister_client(state.clients, client)
     Logger.info("unregister: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
@@ -97,6 +88,28 @@ defmodule OffBroadwayOtpDistribution.Receiver do
     send(state.producer, {:respond_to_pull_request, messages})
 
     {:noreply, state}
+  end
+
+  @impl GenServer
+  def handle_info({:DOWN, ref, _, pid, reason}, state) do
+    Logger.info("client down (#{reason}): #{inspect(ref)}, #{inspect(pid)}")
+    clients = unregister_client(state.clients, pid)
+    {:noreply, %{state | clients: clients}}
+  end
+
+  defp register_client(clients, client) do
+    {client_pid, _} = client
+    Process.monitor(client_pid)
+    clients |> CLL.insert(client)
+  end
+
+  defp unregister_client(clients, client_pid) do
+    clients
+    |> CLL.to_list()
+    |> Enum.filter(fn {pid, _} ->
+      pid != client_pid
+    end)
+    |> CLL.init()
   end
 
   defp transform_messages(messages) do
