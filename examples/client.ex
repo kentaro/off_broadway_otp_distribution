@@ -11,7 +11,8 @@ defmodule ExamplesClient do
       raise "Could not connect to the server"
     end
 
-    receiver = retrieve_receiver_pid()
+    :global.sync()
+    receiver = :global.whereis_name(@receiver_name)
     GenServer.call(receiver, :register)
 
     {:ok,
@@ -41,16 +42,5 @@ defmodule ExamplesClient do
   def terminate(_reason, state) do
     Logger.info("terminating...")
     GenServer.call(state.receiver, :unregister)
-  end
-
-  defp retrieve_receiver_pid do
-    receiver = :global.whereis_name(@receiver_name)
-
-    if receiver == :undefined do
-      Process.sleep(100)
-      retrieve_receiver_pid()
-    else
-      receiver
-    end
   end
 end

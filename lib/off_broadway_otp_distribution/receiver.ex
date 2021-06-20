@@ -57,6 +57,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
     Logger.info("pull_messages: #{inspect(may_be_producer)}")
 
     {pid, _} = may_be_producer
+
     if pid == state.producer do
       if client = state.clients |> CLL.value() do
         {pid, _} = client
