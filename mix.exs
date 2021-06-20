@@ -2,14 +2,14 @@ defmodule OffBroadwayOtpDistribution.MixProject do
   use Mix.Project
 
   @version "0.1.0"
-  @description "A OTP distribution connector for Broadway"
+  @description "An OTP distribution connector for Broadway"
   @repo_url "https://github.com/kentaro/off_broadway_otp_distribution"
 
   def project do
     [
       app: :off_broadway_otp_distribution,
       version: @version,
-      elixir: "~> 1.12-rc",
+      elixir: "~> 1.12.0",
       name: "OffBroadwayOtpDistribution",
       description: @description,
       start_permanent: Mix.env() == :prod,
@@ -37,7 +37,7 @@ defmodule OffBroadwayOtpDistribution.MixProject do
 
   defp docs do
     [
-      main: "OffBroadwayOtpDistribution.Producer",
+      main: "OffBroadwayOtpDistribution",
       nest_modules_by_prefix: [OffBroadwayOtpDistribution],
       source_ref: @version,
       source_url: @repo_url,
