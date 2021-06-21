@@ -18,7 +18,7 @@ end
 
 This module provides an OTP distribution connector for Broadway. Using this module, a Broadway process can receive messages via inter-processes communication that supports both `pull` and `push` modes.
 
-If the producer runs on `:pull` mode and the demand it has is not fully met, it sends `:request_message` message to the client via the receiver. You must implement a callback for the message to your client if the producer runs the mode.
+If the producer runs on `:pull` mode and the demand it has is not fully met, it sends `:request_message` message to the client via the receiver. You must implement a callback for the message to your client if the producer runs on the mode.
 
 If the producer runs on `:push` mode, you can freely push a message via `:push_message` regardless of whether the Broadway producer has demand or not.
 
