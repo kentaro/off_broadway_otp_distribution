@@ -74,20 +74,24 @@ defmodule OffBroadwayOtpDistribution.Producer do
     {:noreply, messages, %{state | demand: demand - length(messages)}}
   end
 
+  @impl GenStage
+  def handle_info(_, state) do
+    {:noreply, [], state}
+  end
+
   defp handle_push_messages(state) do
     {:noreply, [], state}
   end
 
-  defp handle_pull_messages(%{demand: demand} = state) do
-    request_pull_messages(state)
-
-    pull_timer =
-      cond do
-        demand > 0 -> schedule_pull_messages(state.pull_interval)
-        true -> nil
-      end
+  defp handle_pull_messages(%{demand: demand} = state) when demand > 0 do
+    1..demand |> Enum.each(fn _ -> request_pull_messages(state) end)
+    pull_timer = schedule_pull_messages(state.pull_interval)
 
     {:noreply, [], %{state | pull_timer: pull_timer}}
+  end
+
+  defp handle_pull_messages(state) do
+    {:noreply, [], state}
   end
 
   defp request_pull_messages(state) do
