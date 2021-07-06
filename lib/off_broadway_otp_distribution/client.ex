@@ -22,7 +22,7 @@ defmodule OffBroadwayOtpDistribution.Client do
     @impl GenServer
     def handle_cast(:pull_message, state) do
       Logger.info("received: :pull_message")
-      GenServer.cast(state.receiver, {:respond_to_pull_request, "I'm alive!"})
+      GenServer.cast(state.receiver, {:send_message, "I'm alive!"})
 
       {:noreply, state}
     end

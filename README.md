@@ -117,7 +117,7 @@ defmodule ExamplesClient do
   @impl GenServer
   def handle_cast(:pull_message, state) do
     Logger.info("received: :pull_message")
-    GenServer.cast(state.receiver, {:respond_to_pull_request, "I'm alive!"})
+    GenServer.cast(state.receiver, {:send_message, "I'm alive!"})
 
     {:noreply, state}
   end
@@ -201,7 +201,7 @@ iex(server@localhost)2>
 
 01:11:32.117 [info]  pull_message: {#PID<19681.225.0>, [:alias | #Reference<19681.3788998035.3703898113.21779>]}
 
-01:11:32.117 [info]  respond_to_pull_request: "I'm alive!"
+01:11:32.117 [info]  send_message: "I'm alive!"
 
 01:11:32.125 [info]  handled: %Broadway.Message{acknowledger: {Broadway.NoopAcknowledger, nil, nil}, batch_key: :default, batch_mode: :bulk, batcher: :default, data: "I'm alive!", metadata: %{}, status: :ok}
 

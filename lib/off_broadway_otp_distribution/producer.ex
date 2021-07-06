@@ -70,7 +70,7 @@ defmodule OffBroadwayOtpDistribution.Producer do
   end
 
   @impl GenStage
-  def handle_info({:respond_to_pull_request, messages}, %{demand: demand} = state) do
+  def handle_info({:send_message, messages}, %{demand: demand} = state) do
     {:noreply, messages, %{state | demand: demand - length(messages)}}
   end
 

@@ -81,11 +81,11 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   end
 
   @impl GenServer
-  def handle_cast({:respond_to_pull_request, message}, state) do
-    Logger.info("respond_to_pull_request: #{inspect(message)}")
+  def handle_cast({:send_message, message}, state) do
+    Logger.info("send_message: #{inspect(message)}")
 
     messages = transform_messages([message])
-    send(state.producer, {:respond_to_pull_request, messages})
+    send(state.producer, {:send_message, messages})
 
     {:noreply, state}
   end
