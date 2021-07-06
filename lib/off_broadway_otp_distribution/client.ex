@@ -9,7 +9,7 @@ defmodule OffBroadwayOtpDistribution.Client do
 
   If the producer implemented as `OffBroadwayOtpDistribution.Producer` runs on `:pull` mode
   and the demand it has is not fully met,
-  it sends `:request_message` message to the client via the receiver.
+  it sends `:pull_message` message to the client via the receiver.
   You must implement a callback for the message if the producer runs on `:pull` mode.
 
   If the producer runs on `:push` mode, you can freely push a message
@@ -20,8 +20,8 @@ defmodule OffBroadwayOtpDistribution.Client do
     use OffBroadwayOtpDistribution.Client
 
     @impl GenServer
-    def handle_cast(:request_message, state) do
-      Logger.info("received: :request_message")
+    def handle_cast(:pull_message, state) do
+      Logger.info("received: :pull_message")
       GenServer.cast(state.receiver, {:respond_to_pull_request, "I'm alive!"})
 
       {:noreply, state}

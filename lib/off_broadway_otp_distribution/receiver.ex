@@ -52,8 +52,8 @@ defmodule OffBroadwayOtpDistribution.Receiver do
     if pid == state.producer do
       if client = state.clients |> CLL.value() do
         {pid, _} = client
-        GenServer.cast(pid, :request_message)
-        Logger.info("request_message: #{inspect(client)}")
+        GenServer.cast(pid, :pull_message)
+        Logger.info("pull_message: #{inspect(client)}")
 
         clients = state.clients |> CLL.next()
         {:reply, :ok, %{state | clients: clients}}

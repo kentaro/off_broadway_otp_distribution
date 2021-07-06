@@ -18,7 +18,7 @@ end
 
 This module provides an OTP distribution connector for Broadway. Using this module, a Broadway process can receive messages via inter-processes communication that supports both `pull` and `push` modes.
 
-If the producer runs on `:pull` mode and the demand it has is not fully met, it sends `:request_message` message to the client via the receiver. You must implement a callback for the message to your client if the producer runs on the mode.
+If the producer runs on `:pull` mode and the demand it has is not fully met, it sends `:pull_message` message to the client via the receiver. You must implement a callback for the message to your client if the producer runs on the mode.
 
 If the producer runs on `:push` mode, you can freely push a message via `:push_message` regardless of whether the Broadway producer has demand or not.
 
@@ -104,10 +104,10 @@ defmodule ExamplesClient do
   use OffBroadwayOtpDistribution.Client
 
   @doc """
-  ## `:request_message`
+  ## `:pull_message`
 
   If the `OffBroadwayOtpDistribution.Producer` runs on `:pull` mode,
-  the producer send `:request_message` to the client.
+  the producer send `:pull_message` to the client.
 
   ## `:push_message`
 
@@ -115,8 +115,8 @@ defmodule ExamplesClient do
   you can freely push a message regardless of whether the producer has demand or not.
   """
   @impl GenServer
-  def handle_cast(:request_message, state) do
-    Logger.info("received: :request_message")
+  def handle_cast(:pull_message, state) do
+    Logger.info("received: :pull_message")
     GenServer.cast(state.receiver, {:respond_to_pull_request, "I'm alive!"})
 
     {:noreply, state}
@@ -199,7 +199,7 @@ Then, you'll see the Broadway process pulls messages from the client to meet the
 iex(server@localhost)2>
 01:11:32.117 [info]  pull_messages: {#PID<0.225.0>, [:alias | #Reference<0.1827069120.2629894145.158617>]}
 
-01:11:32.117 [info]  request_message: {#PID<19681.225.0>, [:alias | #Reference<19681.3788998035.3703898113.21779>]}
+01:11:32.117 [info]  pull_message: {#PID<19681.225.0>, [:alias | #Reference<19681.3788998035.3703898113.21779>]}
 
 01:11:32.117 [info]  respond_to_pull_request: "I'm alive!"
 

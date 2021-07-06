@@ -2,10 +2,10 @@ defmodule ExamplesClient do
   use OffBroadwayOtpDistribution.Client
 
   @doc """
-  ## `:request_message`
+  ## `:pull_message`
 
   If the `OffBroadwayOtpDistribution.Producer` runs on `:pull` mode,
-  the producer send `:request_message` to the client.
+  the producer send `:pull_message` to the client.
 
   ## `:push_message`
 
@@ -13,8 +13,8 @@ defmodule ExamplesClient do
   you can freely push a message regardless of whether the producer has demand or not.
   """
   @impl GenServer
-  def handle_cast(:request_message, state) do
-    Logger.info("received: :request_message")
+  def handle_cast(:pull_message, state) do
+    Logger.info("received: :pull_message")
     GenServer.cast(state.receiver, {:respond_to_pull_request, "I'm alive!"})
 
     {:noreply, state}
