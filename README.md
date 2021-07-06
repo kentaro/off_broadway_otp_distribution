@@ -74,7 +74,7 @@ defmodule ExamplesBroadway do
 
   @impl Broadway
   def handle_message(_, msg, _context) do
-    Logger.info("handled: #{inspect(msg)}")
+    Logger.debug("handle_message: #{inspect(msg)}")
     msg
   end
 end
@@ -116,7 +116,7 @@ defmodule ExamplesClient do
   """
   @impl GenServer
   def handle_cast(:pull_message, state) do
-    Logger.info("received: :pull_message")
+    Logger.debug("received: :pull_message")
     GenServer.cast(state.receiver, {:send_message, "I'm alive!"})
 
     {:noreply, state}

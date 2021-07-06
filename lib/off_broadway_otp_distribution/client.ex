@@ -21,7 +21,7 @@ defmodule OffBroadwayOtpDistribution.Client do
 
     @impl GenServer
     def handle_cast(:pull_message, state) do
-      Logger.info("received: :pull_message")
+      Logger.debug("received: :pull_message")
       GenServer.cast(state.receiver, {:send_message, "I'm alive!"})
 
       {:noreply, state}
@@ -76,13 +76,13 @@ defmodule OffBroadwayOtpDistribution.Client do
 
       @impl GenServer
       def handle_info({:DOWN, _, _, _, reason}, state) do
-        Logger.info("Server is down: #{reason}")
+        Logger.error("Server is down: #{reason}")
         {:noreply, %{state | receiver: nil}}
       end
 
       @impl GenServer
       def terminate(reason, state) do
-        Logger.info("Client is terminating: #{inspect(reason)}")
+        Logger.error("Client is terminating: #{inspect(reason)}")
       end
 
       defp connect_to_receiver(receiver_name, retry_count) do

@@ -30,7 +30,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   @impl GenServer
   def handle_call(:register, client, state) do
     clients = register_client(state.clients, client)
-    Logger.info("register: #{inspect(client)}")
+    Logger.debug("register: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
   end
@@ -38,14 +38,14 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   @impl GenServer
   def handle_call(:unregister, client, state) do
     clients = unregister_client(state.clients, client)
-    Logger.info("unregister: #{inspect(client)}")
+    Logger.debug("unregister: #{inspect(client)}")
 
     {:reply, :ok, %{state | clients: clients}}
   end
 
   @impl GenServer
   def handle_call(:pull_messages, may_be_producer, state) do
-    Logger.info("pull_messages: #{inspect(may_be_producer)}")
+    Logger.debug("pull_messages: #{inspect(may_be_producer)}")
 
     {pid, _} = may_be_producer
 
@@ -53,7 +53,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
       if client = state.clients |> CLL.value() do
         {pid, _} = client
         GenServer.cast(pid, :pull_message)
-        Logger.info("pull_message: #{inspect(client)}")
+        Logger.debug("pull_message: #{inspect(client)}")
 
         clients = state.clients |> CLL.next()
         {:reply, :ok, %{state | clients: clients}}
@@ -68,7 +68,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_cast({:push_message, message}, state) do
-    Logger.info("push_message: #{inspect(message)}")
+    Logger.debug("push_message: #{inspect(message)}")
 
     if state.mode == :push do
       messages = transform_messages([message])
@@ -82,7 +82,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_cast({:send_message, message}, state) do
-    Logger.info("send_message: #{inspect(message)}")
+    Logger.debug("send_message: #{inspect(message)}")
 
     messages = transform_messages([message])
     send(state.producer, {:send_message, messages})
@@ -92,7 +92,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_info({:DOWN, ref, _, pid, reason}, state) do
-    Logger.info("client down (#{reason}): #{inspect(ref)}, #{inspect(pid)}")
+    Logger.error("Client down (#{reason}): #{inspect(ref)}, #{inspect(pid)}")
     clients = unregister_client(state.clients, pid)
     {:noreply, %{state | clients: clients}}
   end

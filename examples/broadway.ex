@@ -33,7 +33,7 @@ defmodule ExamplesBroadway do
 
   @impl Broadway
   def handle_message(_, msg, _context) do
-    Logger.info("handled: #{inspect(msg)}")
+    Logger.debug("handle_message: #{inspect(msg)}")
     msg
   end
 end
