@@ -6,7 +6,8 @@ defmodule OffBroadwayOtpDistribution.Receiver do
   @default_receiver_name :off_broadway_otp_distribution_receiver
 
   def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+    name = opts[:name] || @default_receiver_name
+    GenServer.start_link(__MODULE__, opts, name: name)
   end
 
   @impl GenServer

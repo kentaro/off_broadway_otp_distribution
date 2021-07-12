@@ -16,12 +16,7 @@ defmodule OffBroadwayOtpDistribution.Producer do
       raise("#{__MODULE__} currently supports only a single instance.")
     end
 
-    children = [
-      {DynamicSupervisor,
-       strategy: :one_for_one, name: OffBroadwayOtpDistribution.DynamicSupervisor}
-    ]
-
-    {children, opts}
+    {[], opts}
   end
 
   @impl GenStage
@@ -29,16 +24,12 @@ defmodule OffBroadwayOtpDistribution.Producer do
     mode = opts[:mode] || @default_producer_mode
 
     {:ok, receiver} =
-      DynamicSupervisor.start_child(
-        OffBroadwayOtpDistribution.DynamicSupervisor,
-        {
-          OffBroadwayOtpDistribution.Receiver,
-          opts[:receiver] ++
-            [
-              producer: self(),
-              mode: mode
-            ]
-        }
+      OffBroadwayOtpDistribution.Receiver.start_link(
+        opts[:receiver] ++
+          [
+            producer: self(),
+            mode: mode
+          ]
       )
 
     {:producer,
