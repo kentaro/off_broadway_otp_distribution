@@ -44,6 +44,8 @@ defmodule OffBroadwayOtpDistribution.Producer do
 
   @impl GenStage
   def handle_demand(incoming_demand, %{demand: demand} = state) do
+    Logger.debug("handle_demand: incoming_demand (#{incoming_demand}), state (#{inspect(state)})")
+
     case state.mode do
       :push -> handle_push_messages(state)
       :pull -> handle_pull_messages(%{state | demand: demand + incoming_demand})
