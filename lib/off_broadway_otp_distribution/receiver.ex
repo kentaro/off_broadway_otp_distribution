@@ -93,7 +93,7 @@ defmodule OffBroadwayOtpDistribution.Receiver do
 
   @impl GenServer
   def handle_info({:DOWN, ref, _, pid, reason}, state) do
-    Logger.error("Client down (#{reason}): #{inspect(ref)}, #{inspect(pid)}")
+    Logger.error("[receiver] Client down (#{inspect(reason)}): ref (#{inspect(ref)}), pid (#{inspect(pid)})")
     clients = unregister_client(state.clients, pid)
     {:noreply, %{state | clients: clients}}
   end
