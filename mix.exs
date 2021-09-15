@@ -29,7 +29,7 @@ defmodule OffBroadwayOtpDistribution.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:broadway, "~> 0.6.0"},
+      {:broadway, "~> 1.0"},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
       {:cll, "~> 0.1.0"}
     ]
